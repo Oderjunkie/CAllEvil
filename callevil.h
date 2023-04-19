@@ -27,7 +27,7 @@
     YAY = 1, yay = 1, NAY = 0, nay = 0,
     ONE = 1, one = 1, UNO = 1, uno = 1,
     ZERO = 0, zero = 0, CERO = 0, cero = 0,
-    YEAH = 1, yeah = 1,
+    YEAH = 1, yeah = 1, SI = 1, si = 1, NAO = 0, nao = 0
   } bool;
 
   #define bool bool
@@ -150,7 +150,7 @@
     SIZEOF_LONG_INT = sizeof(long int),
   };
   
-  #if SIZEOF_VOID == SIZEOF_VOID_P
+  #if SIZEOF_CHAR == SIZEOF_VOID_P
     typedef signed char isize;
     typedef unsigned char usize;
     #define isize isize
@@ -177,6 +177,8 @@
       #endif
     #endif
   #endif
+
+  #define nullptr NULL
   
   #define and &&
   #define or ||
@@ -202,40 +204,68 @@
   #define nop nothing;
   
   #define begin {
-  #define end ;}
+  #define end }
   
-  #define if if (assert_THEN_keyword(
-  DECLARE_KEYWORD(THEN);
-  #define then , THEN_V)) begin
+  #define if if (assert_THEN_keyword((
+  DECLARE_KEYWORD(THEN)
+  #define then ), THEN_V)) begin
   #define else end else begin
   
-  #define while while (assert_DO_keyword(
-  DECLARE_KEYWORD(DO);
-  #define do , DO_V)) begin
+  #define while while (assert_DO_keyword((
+  DECLARE_KEYWORD(DO)
+  #define do ), DO_V)) begin
   
   #define continue continue;
   #define break break;
   
-  #define switch switch (assert_AMONG_keyword(
-  DECLARE_KEYWORD(AMONG);
-  #define among , AMONG_V)) {
+  #define switch switch (assert_AMONG_keyword((
+  DECLARE_KEYWORD(AMONG)
+  #define among ), AMONG_V)) {
   #define case if true then break end case
   #define default if true then break end default
   
-  #define for for (assert_CHECK_keyword(
-  DECLARE_KEYWORD(CHECK);
-  #define check , CHECK_V); assert_AFTERWARDS_keyword(
-  DECLARE_KEYWORD(AFTERWARDS);
-  #define afterwards , AFTERWARDS_V); assert_DURING_keyword(
-  DECLARE_KEYWORD(DURING);
-  #define during , DURING_V)) begin
+  DECLARE_KEYWORD(CHECK)
+  #ifdef __STDC_VERSION__
+    #define for for (
+    #define check ; assert_AFTERWARDS_keyword((
+  #else
+    #define for for (assert_CHECK_keyword((
+    #define check ), CHECK_V); assert_AFTERWARDS_keyword((
+  #endif
+  DECLARE_KEYWORD(AFTERWARDS)
+  #define afterwards ), AFTERWARDS_V); assert_DURING_keyword((
+  DECLARE_KEYWORD(DURING)
+  #define during ), DURING_V)) begin
+  
+  DECLARE_KEYWORD(TIMES)
+  #ifdef __STDC_VERSION__
+    #define repeat for struct { int i, N; } _repeat = {0, (assert_TIMES_keyword(
+    #define times , TIMES_V)) } check _repeat.i < _repeat.N afterwards increment _repeat.i during
+  #else
+    #define repeat DECL_AS_EXPR(int REQUIRES_C99_OR_ABOVE: -1); if
+    #define times ), TIMES_V)) then
+  #endif
+  
+  #define loop while true do
+
+  #ifdef __GNUC__
+    #define defer defer_1(__COUNTER__)
+    #define defer_1(counter) defer_2(defer_3, __COUNTER__)
+    #define defer_2(f, a) f(a)
+    #define defer_3(counter) \
+      auto void _defer_##counter(void *); \
+      __attribute__ ((cleanup(_defer_##counter))) struct {} foo; \
+      auto void _defer_##counter(__attribute__((unused)) void *_) begin
+  #else
+    #define defer if DECL_AS_EXPR(int REQUIRES_GNU_C: -1), false then
+  #endif
   
   #define declare static const u8 PASTE2(EXPECTED_STRUCT_LINE_, __LINE__)[
   #define struct(name) 1]; struct name; typedef struct name name; struct name {
   #define union(name) 1]; union name; typedef union name name; union name
   #define enum(name) 1]; enum name; typedef enum name name; enum name
   
-  #define main int main(int argc, char *argv[]) {
+  #define main int main(int argc, char *argv[]) { (void) argc; (void) argv;
   #define return(expr) return expr;
   
   #define PASTE0()
